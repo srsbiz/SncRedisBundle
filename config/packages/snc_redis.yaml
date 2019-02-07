@@ -1,0 +1,78 @@
+# See: https://github.com/snc/SncRedisBundle/blob/master/Resources/doc/index.md
+snc_redis:
+    clients:
+
+# Define your clients here. The example below connects to database 0 of the default Redis server.
+#
+# See https://github.com/snc/SncRedisBundle/blob/master/Resources/doc/index.md for instructions on
+# how to configure the bundle.
+#
+#        default:
+#            type: predis
+#            alias: default
+#            dsn: "%env(REDIS_URL)%"
+
+        default:
+            type: '%redis.driver.type%'
+            alias: default
+            dsn: '%env(REDIS_URL)%'
+            logging: '%kernel.debug%'
+            options:
+                connection_timeout: 10
+                read_write_timeout: 30
+        cache:
+            type: '%redis.driver.type%'
+            alias: cache
+            dsn: '%env(REDIS_URL)%'
+            logging: '%kernel.debug%'
+            options:
+                profile: 2.2
+                connection_timeout: 10
+                read_write_timeout: 30
+        profiler_storage:
+            type: '%redis.driver.type%'
+            alias: profiler_storage
+            dsn: '%env(REDIS_URL)%'
+            logging: true
+
+    session:
+        client: default
+        prefix: session
+
+    #doctrine:
+    #    metadata_cache:
+    #        client: cache
+    #        entity_manager:
+    #            - default
+    #            - mysql_logs
+    #            - mysql_sessions
+    #        document_manager:
+    #            - default
+    #            - mysql_logs
+    #            - mysql_sessions
+    #    result_cache:
+    #        client: cache
+    #        entity_manager:
+    #            - default
+    #            - mysql_logs
+    #            - mysql_sessions
+    #    query_cache:
+    #        client: cache
+    #        entity_manager:
+    #            - default
+    #            - mysql_logs
+    #            - mysql_sessions
+    #    second_level_cache:
+    #        client: cache
+    #        entity_manager:
+    #            - default
+    #            - mysql_logs
+    #            - mysql_sessions
+
+    profiler_storage:
+        # Uncomment if want to use definition from the beginning of THIS file.
+        #client: profiler_storage
+
+        # Uncomment if want to use definition from services.yaml file.
+        client: profiler.storage
+        ttl: 3600
