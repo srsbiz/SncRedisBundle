@@ -101,7 +101,7 @@ class SncRedisExtension extends Extension
     {
         $dsnResolver = function ($dsn) use ($container) {
             $usedEnvs = null;
-            if (method_exists($container, 'resolveEnvPlaceholders')) {
+            if (\method_exists($container, 'resolveEnvPlaceholders')) {
                 $container->resolveEnvPlaceholders($dsn, null, $usedEnvs);
             }
 
@@ -115,12 +115,22 @@ class SncRedisExtension extends Extension
                 return $parsedDsn;
             }
 
-            throw new \InvalidArgumentException(sprintf('Given Redis DSN "%s" is invalid.', $dsn));
+            throw new \InvalidArgumentException(\sprintf('Given Redis DSN "%s" is invalid.', $dsn));
         };
 
-        $client['dsns'] = array_map($dsnResolver, $client['dsns']);
+        $client['dsns'] = \array_map($dsnResolver, $client['dsns']);
+        $type = $client['type'];
 
-        switch ($client['type']) {
+        if (\method_exists($container, 'resolveEnvPlaceholders')) {
+            $envs = null;
+            $type = $container->resolveEnvPlaceholders($type, null, $envs);
+
+            if ($envs) {
+                $type = $container->resolveEnvPlaceholders($type, true, $envs);
+            }
+        }
+
+        switch ($type) {
             case 'predis':
                 $this->loadPredisClient($client, $container);
                 break;
