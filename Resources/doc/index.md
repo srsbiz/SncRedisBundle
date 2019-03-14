@@ -56,7 +56,9 @@ You have to configure at least one client. In the above example your service
 container will contain the service `snc_redis.default` which will return a
 `Predis` client.
 
-Available types are `predis` and `phpredis`.
+Available types are `auto`, `predis` and `phpredis`.
+If type is set to `auto` then the best available adapter will be used depending on your
+environment. An empty or not present `type` attribute will be recognized as `auto`.
 
 A more complex setup which contains a clustered client could look like this:
 

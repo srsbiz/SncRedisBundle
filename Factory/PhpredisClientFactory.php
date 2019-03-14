@@ -89,7 +89,9 @@ class PhpredisClientFactory
      */
     private function createClient($class, $alias)
     {
-        if (is_a($class, '\Snc\RedisBundle\Client\Phpredis\Client', true)) {
+        if (\is_a($class, Client::class, true) ||
+            \is_a($class, Client42::class, true)
+        ) {
             $client = new $class(array('alias' => $alias), $this->logger);
         } else {
             $client = new $class();
@@ -97,6 +99,7 @@ class PhpredisClientFactory
 
         return $client;
     }
+
 
     /**
      * Load the correct serializer for Redis
