@@ -106,9 +106,13 @@ class Configuration implements ConfigurationInterface
                     ->prototype('array')
                         ->fixXmlConfig('dsn')
                         ->children()
-                            ->scalarNode('type')->isRequired()
+                            ->scalarNode('type')
                                 ->validate()
-                                    ->ifNotInArray(['predis', 'phpredis'])
+                                    ->ifNotInArray([
+                                        'auto',
+                                        'predis',
+                                        'phpredis'
+                                    ])
                                     ->thenInvalid('The redis client type %s is invalid.')
                                 ->end()
                             ->end()

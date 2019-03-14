@@ -43,6 +43,8 @@ class Client extends Redis
      */
     public function __construct(array $parameters = array(), RedisLogger $logger = null)
     {
+        parent::__construct();
+
         $this->logger = $logger;
         $this->alias = isset($parameters['alias']) ? $parameters['alias'] : '';
     }

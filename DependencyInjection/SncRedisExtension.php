@@ -119,9 +119,14 @@ class SncRedisExtension extends Extension
         };
 
         $client['dsns'] = \array_map($dsnResolver, $client['dsns']);
-        $type = $client['type'];
+        $type = $client['type'] ?? 'auto';
+        $supportedTypes = [
+            'auto',
+            'predis',
+            'phpredis',
+        ];
 
-        if (\method_exists($container, 'resolveEnvPlaceholders')) {
+        if (!\in_array($type, $supportedTypes) && \method_exists($container, 'resolveEnvPlaceholders')) {
             $envs = null;
             $type = $container->resolveEnvPlaceholders($type, null, $envs);
 
@@ -131,13 +136,32 @@ class SncRedisExtension extends Extension
         }
 
         switch ($type) {
+            case 'auto':
+                $this->loadBestClient($client, $container);
+                break;
             case 'predis':
                 $this->loadPredisClient($client, $container);
                 break;
             case 'phpredis':
-                $this->loadPhpredisClient($client, $container);
+                $this->loadPhpRedisClient($client, $container);
                 break;
         }
+    }
+
+    /**
+     * Prefers adapter from PHP extension (if available).
+     * @param array $client
+     * @param ContainerBuilder $container
+     */
+    protected function loadBestClient(array $client, ContainerBuilder $container)
+    {
+        if (\extension_loaded('redis')) {
+            $this->loadPhpRedisClient($client, $container);
+
+            return;
+        }
+
+        $this->loadPredisClient($client, $container);
     }
 
     /**
@@ -254,7 +278,7 @@ class SncRedisExtension extends Extension
      *
      * @throws \RuntimeException
      */
-    protected function loadPhpredisClient(array $client, ContainerBuilder $container)
+    protected function loadPhpRedisClient(array $client, ContainerBuilder $container)
     {
         $connectionCount = count($client['dsns']);
 
@@ -267,15 +291,18 @@ class SncRedisExtension extends Extension
         $phpredisId = sprintf('snc_redis.%s', $client['alias']);
 
         $phpRedisVersion = phpversion('redis');
+
         if (version_compare($phpRedisVersion, '4.0.0') >= 0 && $client['logging']) {
             $client['logging'] = false;
             @trigger_error(sprintf('Redis logging is not supported on PhpRedis %s and has been automatically disabled, disable logging in config to suppress this warning', $phpRedisVersion), E_USER_WARNING);
         }
 
         $phpredisClientclass = $container->getParameter('snc_redis.phpredis_client.class');
+
         if ($client['logging']) {
             $phpredisClientclass = $container->getParameter('snc_redis.phpredis_connection_wrapper.class');
         }
+
         $phpredisDef = new Definition($phpredisClientclass);
         $phpredisDef->setFactory(array(
             new Definition(PhpredisClientFactory::class, [new Reference('snc_redis.logger')]),
