@@ -3,6 +3,7 @@
 namespace Snc\RedisBundle\Factory;
 
 use Snc\RedisBundle\Client\Phpredis\Client;
+use Snc\RedisBundle\Client\Phpredis\Client42;
 use Snc\RedisBundle\DependencyInjection\Configuration\RedisDsn;
 use Snc\RedisBundle\Logger\RedisLogger;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
