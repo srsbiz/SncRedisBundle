@@ -58,6 +58,7 @@ class ConnectionFactory extends Factory
         if (isset($parameters->parameters)) {
             $this->setDefaultParameters($parameters->parameters);
         }
+
         /** @var ConnectionWrapper $connection */
         $connection = parent::create($parameters);
 
@@ -66,6 +67,11 @@ class ConnectionFactory extends Factory
                 $wrapper = $this->wrapper;
                 $connection = new $wrapper($connection);
                 $connection->setLogger($this->logger);
+                $this->logger->setIsPersistentConnection($connection, $parameters->persistent);
+                $this->logger->setAlias($connection, $parameters->alias);
+                $this->logger->setScheme($connection, $parameters->scheme);
+                $this->logger->setHost($connection, $parameters->host);
+                $this->logger->setPort($connection, $parameters->port);
             }
         }
 

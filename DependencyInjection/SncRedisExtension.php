@@ -63,7 +63,10 @@ class SncRedisExtension extends Extension
 
         if (isset($config['monolog'])) {
             if (!empty($config['clients'][$config['monolog']['client']]['logging'])) {
-                throw new InvalidConfigurationException(sprintf('You have to disable logging for the client "%s" that you have configured under "snc_redis.monolog.client"', $config['monolog']['client']));
+                throw new InvalidConfigurationException(\sprintf(
+                    'You have to disable logging for the client "%s" that you have configured under "snc_redis.monolog.client"',
+                    $config['monolog']['client']
+                ));
             }
             $this->loadMonolog($config, $container);
         }
@@ -476,12 +479,12 @@ class SncRedisExtension extends Extension
         $container->setAlias('swiftmailer.spool.redis', 'snc_redis.swiftmailer.spool');
     }
 
-     /* Loads the profiler storage configuration.
-     *
-     * @param array            $config    A configuration array
-     * @param ContainerBuilder $container A ContainerBuilder instance
-     * @param XmlFileLoader    $loader    A XmlFileLoader instance
-     */
+    /* Loads the profiler storage configuration.
+    *
+    * @param array            $config    A configuration array
+    * @param ContainerBuilder $container A ContainerBuilder instance
+    * @param XmlFileLoader    $loader    A XmlFileLoader instance
+    */
     protected function loadProfilerStorage(array $config, ContainerBuilder $container, XmlFileLoader $loader)
     {
         $loader->load('profiler_storage.xml');

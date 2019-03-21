@@ -85,7 +85,7 @@ class Configuration implements ConfigurationInterface
      */
     private function addClientsSection(ArrayNodeDefinition $rootNode)
     {
-        $loggingDefault = (version_compare(phpversion('redis'), '4.0.0') >= 0 ? false : $this->debug);
+        $loggingDefault = $this->debug;
 
         $rootNode
             ->fixXmlConfig('client')

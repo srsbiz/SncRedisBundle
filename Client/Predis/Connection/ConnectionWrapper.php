@@ -47,6 +47,14 @@ class ConnectionWrapper implements NodeConnectionInterface
     }
 
     /**
+     * @return string
+     */
+    public function getAlias(): string
+    {
+        return $this->connection->getParameters()->alias;
+    }
+
+    /**
      * Returns the underlying connection object
      *
      * @return NodeConnectionInterface
@@ -64,6 +72,11 @@ class ConnectionWrapper implements NodeConnectionInterface
     public function setLogger(RedisLogger $logger = null)
     {
         $this->logger = $logger;
+
+        if ($this->logger) {
+            $this->logger->addAdapter($this);
+            $this->logger->setIsConnected($this, $this->isConnected());
+        }
     }
 
     /**
@@ -71,7 +84,23 @@ class ConnectionWrapper implements NodeConnectionInterface
      */
     public function connect()
     {
-        return $this->connection->connect();
+        try {
+            $result = $this->connection->connect();
+            $error = null;
+        } catch (\Throwable $e) {
+            $error = $e;
+        }
+
+        if (!$error) {
+            if ($this->logger) {
+                $params = $this->connection->getParameters();
+                $this->logger->setIsConnected($this, true);
+            }
+        } else {
+            throw $error;
+        }
+
+        return $result;
     }
 
     /**
@@ -79,7 +108,13 @@ class ConnectionWrapper implements NodeConnectionInterface
      */
     public function disconnect()
     {
-        return $this->connection->disconnect();
+        $result = $this->connection->disconnect();
+
+        if ($this->logger) {
+            $this->logger->setIsConnected(false);
+        }
+
+        return $result;
     }
 
     /**
@@ -178,7 +213,6 @@ class ConnectionWrapper implements NodeConnectionInterface
 
         $error = $result instanceof Error ? (string) $result : false;
         $this->logger->logCommand($this->commandToString($command), $duration, $this->getParameters()->alias, $error);
-
         return $result;
     }
 

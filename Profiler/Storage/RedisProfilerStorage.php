@@ -199,15 +199,15 @@ class RedisProfilerStorage implements ProfilerStorageInterface
                 // Add to index
                 $indexName = $this->getIndexName();
 
-                $indexRow = implode("\t", array(
-                    $profile->getToken(),
-                    $profile->getIp(),
-                    $profile->getMethod(),
-                    $profile->getUrl(),
-                    $profile->getTime(),
-                    $profile->getParentToken(),
-                    $profile->getStatusCode(),
-                )) . "\n";
+                $indexRow = \implode("\t", [
+                        $profile->getToken(),
+                        $profile->getIp(),
+                        $profile->getMethod(),
+                        $profile->getUrl(),
+                        $profile->getTime(),
+                        $profile->getParentToken(),
+                        $profile->getStatusCode(),
+                    ]) . "\n";
 
                 return $this->appendValue($indexName, $indexRow, $this->lifetime);
             }

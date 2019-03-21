@@ -38,9 +38,17 @@ class PhpredisClientFactory
             throw new \RuntimeException(sprintf('The factory can only instantiate \Redis classes: %s asked', $class));
         }
 
-        $client = $this->createClient($class, $alias);
-
         $parsedDsn = new RedisDsn($dsn);
+
+        if ($parsedDsn->getSocket()) {
+            $scheme = 'unix';
+        } else if ($parsedDsn->getTls()) {
+            $scheme = 'tls';
+        } else {
+            $scheme = 'tcp';
+        }
+
+        $client = $this->createClient($class, $alias, $scheme);
 
         $connectParameters = array();
         if (null !== $parsedDsn->getSocket()) {
@@ -85,15 +93,19 @@ class PhpredisClientFactory
     /**
      * @param string $class Redis class to instantiate
      * @param string $alias Connection alias provided in bundle client config
+     * @param string $scheme
      *
      * @return \Redis|Client
      */
-    private function createClient($class, $alias)
+    private function createClient($class, $alias, string $scheme)
     {
         if (\is_a($class, Client::class, true) ||
             \is_a($class, Client42::class, true)
         ) {
-            $client = new $class(array('alias' => $alias), $this->logger);
+            $client = new $class([
+                'alias' => $alias,
+                'scheme' => $scheme,
+            ], $this->logger);
         } else {
             $client = new $class();
         }
