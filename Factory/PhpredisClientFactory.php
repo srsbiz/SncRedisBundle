@@ -51,6 +51,7 @@ class PhpredisClientFactory
         $client = $this->createClient($class, $alias, $scheme);
 
         $connectParameters = array();
+
         if (null !== $parsedDsn->getSocket()) {
             $connectParameters[] = $parsedDsn->getSocket();
             $connectParameters[] = null;
@@ -64,6 +65,7 @@ class PhpredisClientFactory
         } else {
             $connectParameters[] = null;
         }
+
         if (isset($options['connection_persistent'])) {
             $connectParameters[] = $parsedDsn->getPersistentId();
         }
@@ -81,6 +83,10 @@ class PhpredisClientFactory
 
         if (null !== $parsedDsn->getDatabase()) {
             $client->select($parsedDsn->getDatabase());
+        }
+
+        if (isset($options['read_write_timeout'])) {
+            $client->setOption(\Redis::OPT_READ_TIMEOUT, (float) $options['read_write_timeout']);
         }
 
         if (isset($options['serialization'])) {
