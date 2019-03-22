@@ -11,8 +11,6 @@
 
 namespace Snc\RedisBundle\DependencyInjection;
 
-use Snc\RedisBundle\Client\Phpredis\Client;
-use Snc\RedisBundle\Client\Phpredis\Client42;
 use Snc\RedisBundle\DependencyInjection\Configuration\Configuration;
 use Snc\RedisBundle\DependencyInjection\Configuration\RedisDsn;
 use Snc\RedisBundle\DependencyInjection\Configuration\RedisEnvDsn;
@@ -305,12 +303,16 @@ class SncRedisExtension extends Extension
             $phpRedisVersion = \phpversion('redis');
 
             if (\version_compare($phpRedisVersion, '4.0.0') >= 0 &&
-                Client42::class !== $phpRedisClientClass
+                'Snc\RedisBundle\Client\Phpredis\Client42' !== $phpRedisClientClass
             ) {
-                if (!$phpRedisClientClass || \in_array($phpRedisClientClass, [Client::class])) {
+                if (!$phpRedisClientClass ||
+                    \in_array($phpRedisClientClass, [
+                        'Snc\RedisBundle\Client\Phpredis\Client'
+                    ])
+                ) {
                     // Class not defined or not an external class.
 
-                    $phpRedisClientClass = Client42::class;
+                    $phpRedisClientClass = 'Snc\RedisBundle\Client\Phpredis\Client42';
                 } else {
                     $client['logging'] = false;
                     @trigger_error(\sprintf(
@@ -318,7 +320,7 @@ class SncRedisExtension extends Extension
                         'has been automatically disabled. Disable logging in config to suppress this warning or ' .
                         'use %s class (or any other class which extends it) in the "%s" parameter',
                         $phpRedisVersion,
-                        Client42::class,
+                        'Snc\RedisBundle\Client\Phpredis\Client42',
                         'snc_redis.phpredis_connection_wrapper.class'
                     ),
                         E_USER_WARNING
