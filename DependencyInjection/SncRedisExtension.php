@@ -297,10 +297,10 @@ class SncRedisExtension extends Extension
         );
 
         $phpRedisClientClass = $container->getParameter('snc_redis.phpredis_client.class');
+        $phpRedisVersion = \phpversion('redis');
 
         if ($client['logging']) {
             $phpRedisClientClass = $container->getParameter('snc_redis.phpredis_connection_wrapper.class');
-            $phpRedisVersion = \phpversion('redis');
 
             if (\version_compare($phpRedisVersion, '4.0.0') >= 0 &&
                 'Snc\RedisBundle\Client\Phpredis\Client42' !== $phpRedisClientClass
