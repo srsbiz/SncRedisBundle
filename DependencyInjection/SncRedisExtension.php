@@ -15,7 +15,6 @@ use Snc\RedisBundle\DependencyInjection\Configuration\Configuration;
 use Snc\RedisBundle\DependencyInjection\Configuration\RedisDsn;
 use Snc\RedisBundle\DependencyInjection\Configuration\RedisEnvDsn;
 use Snc\RedisBundle\Factory\PredisParametersFactory;
-use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -245,9 +244,9 @@ class SncRedisExtension extends Extension
             }
             $clientDef->addArgument($connections);
         }
+
         $clientDef->addArgument(new Reference($optionId));
         $container->setDefinition(sprintf('snc_redis.%s', $client['alias']), $clientDef);
-        $container->setAlias(sprintf('snc_redis.%s_client', $client['alias']), sprintf('snc_redis.%s', $client['alias']));
     }
 
     /**
@@ -299,12 +298,26 @@ class SncRedisExtension extends Extension
         $phpRedisClientClass = $container->getParameter('snc_redis.phpredis_client.class');
         $phpRedisVersion = \phpversion('redis');
 
-        if ($client['logging']) {
+        if (\version_compare($phpRedisVersion, '4.0.0') >= 0) {
             $phpRedisClientClass = $container->getParameter('snc_redis.phpredis_connection_wrapper.class');
+            $overrideClass = false;
+            $bestClass = null;
 
-            if (\version_compare($phpRedisVersion, '4.0.0') >= 0 &&
-                'Snc\RedisBundle\Client\Phpredis\Client42' !== $phpRedisClientClass
-            ) {
+            if (\version_compare($phpRedisVersion, '4.3.0') >= 0) {
+                $bestClass = 'Snc\RedisBundle\Client\Phpredis\Client43';
+
+                if ($bestClass !== $phpRedisClientClass) {
+                    $overrideClass = true;
+                }
+            } elseif (\version_compare($phpRedisVersion, '4.2.0') >= 0) {
+                $bestClass = 'Snc\RedisBundle\Client\Phpredis\Client42';
+
+                if ($bestClass !== $phpRedisClientClass) {
+                    $overrideClass = true;
+                }
+            }
+
+            if ($overrideClass) {
                 if (!$phpRedisClientClass ||
                     \in_array($phpRedisClientClass, [
                         'Snc\RedisBundle\Client\Phpredis\Client'
@@ -312,19 +325,21 @@ class SncRedisExtension extends Extension
                 ) {
                     // Class not defined or not an external class.
 
-                    $phpRedisClientClass = 'Snc\RedisBundle\Client\Phpredis\Client42';
+                    $phpRedisClientClass = $bestClass;
                 } else {
-                    $client['logging'] = false;
-                    @trigger_error(\sprintf(
-                        'Redis logging is not supported on PhpRedis %s using the default client class and ' .
-                        'has been automatically disabled. Disable logging in config to suppress this warning or ' .
-                        'use %s class (or any other class which extends it) in the "%s" parameter',
-                        $phpRedisVersion,
-                        'Snc\RedisBundle\Client\Phpredis\Client42',
-                        'snc_redis.phpredis_connection_wrapper.class'
-                    ),
-                        E_USER_WARNING
-                    );
+                    if ($client['logging']) {
+                        $client['logging'] = false;
+                        @\trigger_error(\sprintf(
+                            'Redis logging is not supported on PhpRedis %s using the default client class and ' .
+                            'has been automatically disabled. Disable logging in config to suppress this warning or ' .
+                            'use %s class (or any other class which extends it) in the "%s" parameter',
+                            $phpRedisVersion,
+                            $bestClass,
+                            'snc_redis.phpredis_connection_wrapper.class'
+                        ),
+                            \E_USER_WARNING
+                        );
+                    }
                 }
             }
         }
@@ -353,8 +368,6 @@ class SncRedisExtension extends Extension
         }
 
         $container->setDefinition($phpRedisId, $phpredisDef);
-        $container->setAlias(sprintf('snc_redis.phpredis.%s', $client['alias']), new Alias($phpRedisId, true));
-        $container->setAlias(sprintf('snc_redis.%s_client', $client['alias']), $phpRedisId);
     }
 
     /**
@@ -375,7 +388,7 @@ class SncRedisExtension extends Extension
 
         $client = $container->getParameter('snc_redis.session.client');
 
-        $client = sprintf('snc_redis.%s_client', $client);
+        $client = sprintf('snc_redis.%s', $client);
 
         $container->setAlias('snc_redis.session.client', $client);
 
@@ -427,7 +440,7 @@ class SncRedisExtension extends Extension
                     break;
             }
 
-            $client = new Reference(sprintf('snc_redis.%s_client', $cache['client']));
+            $client = new Reference(sprintf('snc_redis.%s', $cache['client']));
             foreach ($cache['entity_managers'] as $em) {
                 $def = call_user_func_array($definitionFunction, array($client, $cache));
                 $container->setDefinition(sprintf('doctrine.orm.%s_%s', $em, $name), $def);
@@ -495,7 +508,7 @@ class SncRedisExtension extends Extension
         $container->setParameter('snc_redis.profiler_storage.ttl', $config['profiler_storage']['ttl']);
 
         $client = $container->getParameter('snc_redis.profiler_storage.client');
-        $client = sprintf('snc_redis.%s_client', $client);
+        $client = sprintf('snc_redis.%s', $client);
         $container->setAlias('snc_redis.profiler_storage.client', $client);
     }
 

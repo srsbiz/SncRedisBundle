@@ -4,6 +4,7 @@ namespace Snc\RedisBundle\Factory;
 
 use Snc\RedisBundle\Client\Phpredis\Client;
 use Snc\RedisBundle\Client\Phpredis\Client42;
+use Snc\RedisBundle\Client\Phpredis\Client43;
 use Snc\RedisBundle\DependencyInjection\Configuration\RedisDsn;
 use Snc\RedisBundle\Logger\RedisLogger;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -79,10 +80,14 @@ class PhpredisClientFactory
 
         if (null !== $parsedDsn->getPassword()) {
             $client->auth($parsedDsn->getPassword());
+        } elseif (isset($options['parameters']['password'])) {
+            $client->auth($options['parameters']['password']);
         }
 
         if (null !== $parsedDsn->getDatabase()) {
             $client->select($parsedDsn->getDatabase());
+        } elseif (isset($options['parameters']['database'])) {
+            $client->select($options['parameters']['database']);
         }
 
         if (isset($options['read_write_timeout'])) {
@@ -105,8 +110,9 @@ class PhpredisClientFactory
      */
     private function createClient($class, $alias, string $scheme)
     {
-        if (\is_a($class, Client::class, true) ||
-            \is_a($class, Client42::class, true)
+        if (\is_a($class, Client43::class, true) ||
+            \is_a($class, Client42::class, true) ||
+            \is_a($class, Client::class, true)
         ) {
             $client = new $class([
                 'alias' => $alias,

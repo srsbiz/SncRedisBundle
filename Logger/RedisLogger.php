@@ -16,6 +16,7 @@ use Predis\Connection\NodeConnectionInterface;
 use Psr\Log\LoggerInterface as PsrLoggerInterface;
 use Snc\RedisBundle\Client\Phpredis\Client;
 use Snc\RedisBundle\Client\Phpredis\Client42;
+use Snc\RedisBundle\Client\Phpredis\Client43;
 
 /**
  * RedisLogger
@@ -177,7 +178,8 @@ class RedisLogger
         $alias = null;
         $isConnected = false;
 
-        if ($adapter instanceof Client42 ||
+        if ($adapter instanceof Client43 ||
+            $adapter instanceof Client42 ||
             $adapter instanceof Client
         ) {
             $alias = $adapter->getAlias();
