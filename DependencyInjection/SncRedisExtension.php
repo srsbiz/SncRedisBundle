@@ -15,6 +15,7 @@ use Snc\RedisBundle\DependencyInjection\Configuration\Configuration;
 use Snc\RedisBundle\DependencyInjection\Configuration\RedisDsn;
 use Snc\RedisBundle\DependencyInjection\Configuration\RedisEnvDsn;
 use Snc\RedisBundle\Factory\PredisParametersFactory;
+use Symfony\Component\DependencyInjection\Alias;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
@@ -247,6 +248,10 @@ class SncRedisExtension extends Extension
 
         $clientDef->addArgument(new Reference($optionId));
         $container->setDefinition(sprintf('snc_redis.%s', $client['alias']), $clientDef);
+        $container->setAlias(
+            \sprintf('snc_redis.%s_client', $client['alias']),
+            \sprintf('snc_redis.%s', $client['alias'])
+        );
     }
 
     /**
@@ -368,6 +373,8 @@ class SncRedisExtension extends Extension
         }
 
         $container->setDefinition($phpRedisId, $phpredisDef);
+        $container->setAlias(\sprintf('snc_redis.phpredis.%s', $client['alias']), new Alias($phpRedisId, false));
+        $container->setAlias(\sprintf('snc_redis.%s_client', $client['alias']), $phpRedisId);
     }
 
     /**
@@ -508,7 +515,7 @@ class SncRedisExtension extends Extension
         $container->setParameter('snc_redis.profiler_storage.ttl', $config['profiler_storage']['ttl']);
 
         $client = $container->getParameter('snc_redis.profiler_storage.client');
-        $client = sprintf('snc_redis.%s', $client);
+        $client = \sprintf('snc_redis.%s_client', $client);
         $container->setAlias('snc_redis.profiler_storage.client', $client);
     }
 
